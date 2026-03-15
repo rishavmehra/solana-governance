@@ -40,7 +40,13 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
   const { data: validators } = useGetValidators();
 
   return useQuery({
-    queryKey: ["proposal-votes", proposalPublicKey?.toBase58(), endpoint],
+    queryKey: [
+      "proposal-votes",
+      proposalPublicKey?.toBase58(),
+      endpoint,
+      // Refetch when validators load so we can resolve names (votes use validator identity)
+      validators === undefined ? "no-validators" : validators.length,
+    ],
     staleTime: 1000 * 120, // 2 minutes
     enabled: !!proposalPublicKey,
     queryFn: async (): Promise<TopVoterRecord[]> => {
@@ -55,12 +61,16 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
       ]);
 
       // 2. Optionally fetch validator details (name, etc.)
-      // If you don't need detailed mapping, you might skip this, or use a static list.
-      let validatorMap: Record<string, Validator> = {};
+      // Governance votes use validator identity (withdrawal key); StakeWiz has both identity and vote_identity.
+      // Map by both so lookup works whether we have identity or vote account address.
+      const validatorMap: Record<string, Validator> = {};
       if (validators) {
-        validatorMap = Object.fromEntries(
-          validators.map((v) => [v.vote_identity, v])
-        );
+        for (const v of validators) {
+          validatorMap[v.vote_identity] = v;
+          if (v.identity) {
+            validatorMap[v.identity] = v;
+          }
+        }
       }
 
       // Total stake is calculated from all validators' activated_stake
@@ -73,8 +83,8 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
         const identity = v.identity?.toBase58
           ? v.identity.toBase58()
           : typeof v.identity === "string"
-          ? v.identity
-          : "unknown";
+            ? v.identity
+            : "unknown";
         const validator = validatorMap[identity];
         const validatorName = validator?.name || "Unknown Validator";
         const stakedLamports = v.activeStake || 0;
@@ -86,7 +96,7 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
         let voteTimestamp: string;
         if (v.voteTimestamp && typeof v.voteTimestamp.toNumber === "function") {
           voteTimestamp = new Date(
-            v.voteTimestamp.toNumber() * 1000
+            v.voteTimestamp.toNumber() * 1000,
           ).toISOString();
         } else if (typeof v.voteTimestamp === "number") {
           voteTimestamp = new Date(v.voteTimestamp * 1000).toISOString();
@@ -119,8 +129,8 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
         const identity = v.identity?.toBase58
           ? v.identity.toBase58()
           : typeof v.identity === "string"
-          ? v.identity
-          : "unknown";
+            ? v.identity
+            : "unknown";
 
         const validator = validatorMap[identity];
         const validatorName = validator?.name || "Unknown Validator";
@@ -133,7 +143,7 @@ export const useProposalVotes = (proposalPublicKey: PublicKey | undefined) => {
         let voteTimestamp: string;
         if (v.voteTimestamp && typeof v.voteTimestamp.toNumber === "function") {
           voteTimestamp = new Date(
-            v.voteTimestamp.toNumber() * 1000
+            v.voteTimestamp.toNumber() * 1000,
           ).toISOString();
         } else if (typeof v.voteTimestamp === "number") {
           voteTimestamp = new Date(v.voteTimestamp * 1000).toISOString();
