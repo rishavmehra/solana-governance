@@ -2,6 +2,8 @@ export type Validators = Validator[];
 
 export interface Validator {
   name: string;
+  /** Validator identity (withdrawal authority). Used by governance votes. */
+  identity?: string;
   vote_identity: string;
   activated_stake: number;
   image?: string | null;
@@ -13,6 +15,8 @@ export interface Validator {
   credits?: number;
   epoch_credits: number;
   last_vote: number;
+
+  // Not used in the frontend but can be mapped if needed in the future
   // rank: number;
   // identity: string;
   // root_slot: number;

@@ -106,7 +106,8 @@ const VoteBreakdown = ({
                     formatLamportsDisplay(proposal.forVotesLamports).value
                   }
                   percentage={formatPercentage(
-                    votePercentages.forVotesPercentage
+                    votePercentages.forVotesPercentage,
+                    2,
                   )}
                   color="bg-primary"
                 />
@@ -116,7 +117,8 @@ const VoteBreakdown = ({
                     formatLamportsDisplay(proposal.againstVotesLamports).value
                   }
                   percentage={formatPercentage(
-                    votePercentages.againstVotesPercentage
+                    votePercentages.againstVotesPercentage,
+                    2,
                   )}
                   color="bg-destructive"
                 />
@@ -126,7 +128,8 @@ const VoteBreakdown = ({
                     formatLamportsDisplay(proposal.abstainVotesLamports).value
                   }
                   percentage={formatPercentage(
-                    votePercentages.abstainVotesPercentage
+                    votePercentages.abstainVotesPercentage,
+                    2,
                   )}
                   color="bg-white/30"
                 />

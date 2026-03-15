@@ -26,8 +26,9 @@ export function formatSOL(lamports: number): string {
   }).format(sol);
 }
 
-export function formatPercentage(percentage: number) {
-  return `(${percentage.toFixed(0)}%)`;
+export function formatPercentage(percentage: number, decimals?: number) {
+  const d = decimals ?? 0;
+  return `(${percentage.toFixed(d)}%)`;
 }
 
 export function formatAddress(address: string, length: number = 4): string {
@@ -42,19 +43,19 @@ export function formatCommission(commission: number | undefined): string {
 }
 
 export function formatOptionalSlot(
-  slot: number | null | undefined
+  slot: number | null | undefined,
 ): string | number {
   return isValidNumber(slot) ? slot : "-";
 }
 
 export function formatOptionalCount(
-  count: number | null | undefined
+  count: number | null | undefined,
 ): string | number {
   return isValidNumber(count) ? count : "-";
 }
 
 export function formatLamportsDisplay(
-  lamports: number | null | undefined
+  lamports: number | null | undefined,
 ): LamportsDisplay {
   if (!isValidNumber(lamports)) {
     return {
