@@ -110,15 +110,23 @@ impl<'info> SupportProposal<'info> {
             // this is for emit checks
             current_voting_emit = true;
 
-            let (start_slot, _) =
-                get_epoch_slot_range(clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension);
+            let (start_slot, _) = get_epoch_slot_range(
+                clock.epoch
+                    + self.global_config.discussion_epochs
+                    + self.global_config.snapshot_epoch_extension,
+            );
             snapshot_slot = start_slot + 1000;
             // start voting 1 epoch after snapshot
             // checking in any vote or others is start_epoch <= current_epoch < end_epoch
-            proposal_account.start_epoch =
-                clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension + 1;
-            proposal_account.end_epoch =
-                clock.epoch + self.global_config.discussion_epochs + self.global_config.snapshot_epoch_extension + 1 + self.global_config.voting_epochs;
+            proposal_account.start_epoch = clock.epoch
+                + self.global_config.discussion_epochs
+                + self.global_config.snapshot_epoch_extension
+                + 1;
+            proposal_account.end_epoch = clock.epoch
+                + self.global_config.discussion_epochs
+                + self.global_config.snapshot_epoch_extension
+                + 1
+                + self.global_config.voting_epochs;
             proposal_account.snapshot_slot = snapshot_slot; // 1000 slots into snapshot
 
             let (consensus_result_pda, _) = Pubkey::find_program_address(
