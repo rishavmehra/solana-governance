@@ -105,7 +105,7 @@ Once generated, an operator submits their snapshot's ballot to the on-chain `Bal
 ```bash
 
 # From a snapshot file(cast the vote from the snapshot file)
-ncn \
+ncn-cli \
   --payer-path <PATH_TO_PAYER_KEYPAIR> \
   --authority-path <PATH_TO_AUTHORITY_KEYPAIR> \
   --rpc-url <RPC_URL> \
@@ -114,14 +114,14 @@ ncn \
   --read-path <PATH_TO_SNAPSHOT_FILE>
 
 # From a snapshot file(get the root and hash from the snapshot file)
-ncn \
+ncn-cli \
   --authority-path <PATH_TO_AUTHORITY_KEYPAIR> \
   log-meta-merkle-hash \
   --read-path <PATH_TO_SNAPSHOT_FILE> \
   --is-compressed true
 
 # Or with explicit root and hash
-ncn \
+ncn-cli \
   --payer-path <PATH_TO_PAYER_KEYPAIR> \
   --authority-path <PATH_TO_AUTHORITY_KEYPAIR> \
   --rpc-url <RPC_URL> \

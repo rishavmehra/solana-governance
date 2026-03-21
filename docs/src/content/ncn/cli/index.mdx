@@ -374,7 +374,13 @@ ncn-cli \
 
 ---
 
-## Query Commands
+## Read / Inspection Commands
+
+Use these commands when you only want to inspect on-chain state (no transactions are sent).
+
+- Use `status` for a quick all-in-one health check for a slot.
+- Use `get-*` commands for focused machine/operator-readable outputs.
+- Use `log` if you prefer the older generic account lookup flow.
 
 ### `log`
 
@@ -409,6 +415,143 @@ ncn-cli \
 | `--ty <TYPE>` | Yes | `program-config`, `ballot-box`, `consensus-result`, `proof` |
 | `--snapshot-slot <u64>` | For ballot/result/proof | Target slot |
 | `--vote-account <Pubkey>` | For `proof` only | Validator vote account |
+
+---
+
+### Focused read commands
+
+### `get-program-config`
+
+Fetches and prints the on-chain `ProgramConfig`.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-program-config
+```
+
+---
+
+### `get-operator-whitelist`
+
+Fetches and prints all whitelisted operators from `ProgramConfig`.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-operator-whitelist
+```
+
+---
+
+### `get-ballot`
+
+Fetches and prints the `BallotBox` for a snapshot slot, including tallies and operator votes.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-ballot \
+  --snapshot-slot <SLOT>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot of the target `BallotBox` |
+
+---
+
+### `get-operator-vote`
+
+Looks up an operator's vote inside a slot's `BallotBox`.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-operator-vote \
+  --snapshot-slot <SLOT> \
+  --operator <OPERATOR_PUBKEY>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot of the target `BallotBox` |
+| `--operator <Pubkey>` | Yes | Operator public key to query |
+
+---
+
+### `get-consensus-result`
+
+Fetches and prints the `ConsensusResult` for a snapshot slot.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-consensus-result \
+  --snapshot-slot <SLOT>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot for `ConsensusResult` PDA |
+
+---
+
+### `get-proof`
+
+Fetches and prints the `MetaMerkleProof` for a vote account and consensus result.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  get-proof \
+  --snapshot-slot <SLOT> \
+  --vote-account <VOTE_ACCOUNT_PUBKEY>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot for `ConsensusResult` PDA |
+| `--vote-account <Pubkey>` | Yes | Validator vote account public key |
+
+---
+
+### `ballot-exists`
+
+Checks whether the `BallotBox` account exists for a snapshot slot.
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  ballot-exists \
+  --snapshot-slot <SLOT>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot of the target `BallotBox` |
+
+---
+
+### `status`
+
+Shows a consolidated read-only status view for:
+
+- `ProgramConfig`
+- `BallotBox` for `--snapshot-slot`
+- `ConsensusResult` for `--snapshot-slot`
+
+```bash
+ncn-cli \
+  --rpc-url https://api.devnet.solana.com \
+  --cluster mainnet \
+  status \
+  --snapshot-slot <SLOT>
+```
+
+| Argument | Required | Description |
+|---|---|---|
+| `--snapshot-slot <u64>` | Yes | Snapshot slot used for ballot/result status checks |
 
 ---
 
