@@ -77,7 +77,7 @@ export RESTAKING_PROGRAM_ID="${RESTAKING_PROGRAM_ID:-RestkWeAVL8fRGgzhfeoqFhsqKR
 export VAULT_PROGRAM_ID="${VAULT_PROGRAM_ID:-Vau1t6sLNxnzB7ZDsef8TLbPLfyZMYXH8WTNqUdm9g8}"
 export TIP_ROUTER_PROGRAM_ID="${TIP_ROUTER_PROGRAM_ID:-11111111111111111111111111111111}"
 
-cargo build --release -p "$CLI_PKG"
+RUSTFLAGS="${RUSTFLAGS:--C target-cpu=native}" cargo build --release -p "$CLI_PKG"
 
 BINARY_PATH="$NCN_DIR/target/release/$CLI_BIN_SRC"
 if [ ! -f "$BINARY_PATH" ]; then
@@ -138,10 +138,53 @@ if [ -n "$CONFIG_FILE" ] && [ "$INSTALL_DIR" != "/usr/local/bin" ]; then
   fi
 fi
 
+# Add wrapper function that sets optimal runtime defaults.
+# Users can override any variable by exporting it before calling ncn-cli.
+NCN_WRAPPER_MARKER="# ncn-cli-wrapper"
+if [ -n "$CONFIG_FILE" ]; then
+  mkdir -p "$(dirname "$CONFIG_FILE")" 2>/dev/null || true
+  if ! grep -q "$NCN_WRAPPER_MARKER" "$CONFIG_FILE" 2>/dev/null; then
+    {
+      echo ""
+      echo "$NCN_WRAPPER_MARKER"
+      if [ "$SHELL_NAME" = "fish" ]; then
+        cat << 'FISHEOF'
+function ncn-cli
+    set -l _cpus (nproc 2>/dev/null; or sysctl -n hw.ncpu 2>/dev/null; or echo 4)
+    set -lx RAYON_NUM_THREADS (test -n "$RAYON_NUM_THREADS"; and echo $RAYON_NUM_THREADS; or echo $_cpus)
+    set -lx ZSTD_NBTHREADS (test -n "$ZSTD_NBTHREADS"; and echo $ZSTD_NBTHREADS; or echo $_cpus)
+    set -lx RUST_LOG (test -n "$RUST_LOG"; and echo $RUST_LOG; or echo "info,solana_runtime=warn,solana_accounts_db=warn,solana_metrics=warn")
+    command ncn-cli $argv
+end
+FISHEOF
+      else
+        cat << 'SHEOF'
+ncn-cli() {
+    local _cpus
+    _cpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+    RAYON_NUM_THREADS="${RAYON_NUM_THREADS:-$_cpus}" \
+    ZSTD_NBTHREADS="${ZSTD_NBTHREADS:-$_cpus}" \
+    RUST_LOG="${RUST_LOG:-info,solana_runtime=warn,solana_accounts_db=warn,solana_metrics=warn}" \
+    command ncn-cli "$@"
+}
+SHEOF
+      fi
+    } >> "$CONFIG_FILE"
+    echo -e "${GREEN}Added ncn-cli wrapper function to $CONFIG_FILE${NC}"
+  fi
+fi
+
 echo ""
 echo -e "${GREEN}✓ Installation complete!${NC}"
 echo ""
 echo "Verify installation:"
 echo "  $CLI_BIN_DEST --version"
+echo ""
+echo "Runtime defaults (applied automatically via shell function):"
+echo "  RAYON_NUM_THREADS=<all cpus>  ZSTD_NBTHREADS=<all cpus>"
+echo "  RUST_LOG=info,solana_runtime=warn,solana_accounts_db=warn,solana_metrics=warn"
+echo ""
+echo "Override any default by exporting the variable before calling ncn-cli:"
+echo "  RUST_LOG=debug ncn-cli --help"
 echo ""
 
