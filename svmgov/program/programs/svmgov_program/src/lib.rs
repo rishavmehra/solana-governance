@@ -9,7 +9,7 @@ mod utils;
 use anchor_lang::prelude::*;
 use instructions::*;
 
-use gov_v1::StakeMerkleLeaf;
+use ncn_snapshot::StakeMerkleLeaf;
 
 declare_id!("EKwRPoyRactBV2z2XhUSVU1YbZuyTVq4kU5U5dM2JyZY");
 

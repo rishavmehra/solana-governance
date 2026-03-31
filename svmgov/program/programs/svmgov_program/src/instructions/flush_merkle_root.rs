@@ -24,7 +24,7 @@ pub struct FlushMerkleRoot<'info> {
     pub ballot_box: UncheckedAccount<'info>,
     /// CHECK: Ballot program account
     #[account(
-        constraint = ballot_program.key == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
+        constraint = ballot_program.key == &ncn_snapshot::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub ballot_program: UncheckedAccount<'info>,
     /// CHECK: Program config account
@@ -32,7 +32,7 @@ pub struct FlushMerkleRoot<'info> {
         seeds = [b"ProgramConfig"],
         bump,
         seeds::program = ballot_program.key(),
-        constraint = program_config.owner == &gov_v1::ID @ ProgramError::InvalidAccountOwner,
+        constraint = program_config.owner == &ncn_snapshot::ID @ ProgramError::InvalidAccountOwner,
     )]
     pub program_config: UncheckedAccount<'info>,
     #[account(
@@ -46,6 +46,12 @@ pub struct FlushMerkleRoot<'info> {
 impl<'info> FlushMerkleRoot<'info> {
     pub fn flush_merkle_root(&mut self) -> Result<()> {
         let clock = Clock::get()?;
+
+        // Prevent flushing once voting has started
+        require!(
+            clock.epoch < self.proposal.start_epoch,
+            GovernanceError::CannotModifyAfterStart
+        );
 
         // Clear the consensus_result
         require!(
@@ -92,7 +98,7 @@ impl<'info> FlushMerkleRoot<'info> {
             // Initialize the ballot box via CPI
             let cpi_ctx = CpiContext::new_with_signer(
                 self.ballot_program.to_account_info(),
-                gov_v1::cpi::accounts::InitBallotBox {
+                ncn_snapshot::cpi::accounts::InitBallotBox {
                     payer: self.signer.to_account_info(),
                     proposal: self.proposal.to_account_info(),
                     ballot_box: self.ballot_box.to_account_info(),
@@ -102,7 +108,7 @@ impl<'info> FlushMerkleRoot<'info> {
                 signer,
             );
 
-            gov_v1::cpi::init_ballot_box(
+            ncn_snapshot::cpi::init_ballot_box(
                 cpi_ctx,
                 snapshot_slot,
                 self.proposal.proposal_seed,
