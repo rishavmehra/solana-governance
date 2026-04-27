@@ -30,7 +30,7 @@ declare_program!(svmgov_program);
                     Environment variables can be used for global options: SVMGOV_KEY for --keypair and SVMGOV_RPC for --rpc-url. \
                     Flags override env vars if both are provided.\n\n\
                     To get started, use one of the subcommands below. For example, to list all proposals:\n\
-                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"EKwRPoyRactBV2z2XhUSVU1YbZuyTVq4kU5U5dM2JyZY\"\n\n\
+                    $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"4HarXuo8QjE5GSGzuUxHA1cnNM9mFt2th2JQAC5DSNqU\"\n\n\
                     For more information on each subcommand, use --help, e.g., `svmgov create-proposal --help`."
 )]
 struct Cli {
@@ -187,7 +187,7 @@ enum Commands {
         long_about = "This command retrieves and displays a governance proposal and its details from the Solana Validator Governance program. \
                       An optional RPC URL can be provided to connect to the chain; otherwise, a default URL is used.\n\n\
                       Examples:\n\
-                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"EKwRPoyRactBV2z2XhUSVU1YbZuyTVq4kU5U5dM2JyZY\""
+                      $ svmgov --rpc-url https://api.mainnet-beta.solana.com proposal \"4HarXuo8QjE5GSGzuUxHA1cnNM9mFt2th2JQAC5DSNqU\""
     )]
     Proposal {
         /// Proposal ID to display
@@ -368,6 +368,9 @@ enum Commands {
 
         #[arg(long, help = "Number of extra epochs for snapshot extension")]
         snapshot_epoch_extension: u64,
+
+        #[arg(long, help = "Slot offset from epoch start for snapshot computation (can be negative)")]
+        snapshot_slot_offset: i64,
     },
 
     #[command(
@@ -401,6 +404,9 @@ enum Commands {
 
         #[arg(long, help = "Number of extra epochs for snapshot extension")]
         snapshot_epoch_extension: Option<u64>,
+
+        #[arg(long, help = "Slot offset from epoch start for snapshot computation (can be negative)")]
+        snapshot_slot_offset: Option<i64>,
     },
 
     #[command(
@@ -619,6 +625,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             discussion_epochs,
             voting_epochs,
             snapshot_epoch_extension,
+            snapshot_slot_offset,
         } => {
             instructions::initialize_global_config(
                 cli.keypair,
@@ -631,6 +638,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *discussion_epochs,
                 *voting_epochs,
                 *snapshot_epoch_extension,
+                *snapshot_slot_offset,
             )
             .await?;
         }
@@ -643,6 +651,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             discussion_epochs,
             voting_epochs,
             snapshot_epoch_extension,
+            snapshot_slot_offset,
         } => {
             instructions::update_global_config(
                 cli.keypair,
@@ -655,6 +664,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 *discussion_epochs,
                 *voting_epochs,
                 *snapshot_epoch_extension,
+                *snapshot_slot_offset,
             )
             .await?;
         }

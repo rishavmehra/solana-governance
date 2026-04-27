@@ -5175,7 +5175,7 @@ dependencies = [
 name = "ncn-snapshot"
 version = "1.0.0"
 dependencies = [
- "anchor-lang",
+ "anchor-lang 0.31.1",
 ]
 
 [[package]]

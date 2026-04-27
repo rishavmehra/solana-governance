@@ -2,12 +2,17 @@ import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import {
   BlockchainParams,
+  SupportProposalGlobalConfigInput,
   SupportProposalParams,
   TransactionResult,
   SNAPSHOT_PROGRAM_ID,
   ChainVoteAccountData,
 } from "./types";
-import { createProgramWithWallet, deriveSupportPda } from "./helpers";
+import {
+  createProgramWithWallet,
+  deriveSupportPda,
+  deriveGlobalConfigPda,
+} from "./helpers";
 
 /**
  * Supports a governance proposal
@@ -16,7 +21,8 @@ export async function supportProposal(
   params: SupportProposalParams,
   blockchainParams: BlockchainParams,
   slot: number | undefined,
-  validatorVoteAccount: ChainVoteAccountData | undefined
+  validatorVoteAccount: ChainVoteAccountData | undefined,
+  globalConfig: SupportProposalGlobalConfigInput,
 ): Promise<TransactionResult> {
   const { proposalId, wallet } = params;
 
@@ -32,7 +38,7 @@ export async function supportProposal(
 
   if (!validatorVoteAccount) {
     throw new Error(
-      `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`
+      `No SPL vote account found for validator identity ${wallet.publicKey.toBase58()}`,
     );
   }
 
@@ -43,19 +49,18 @@ export async function supportProposal(
   const supportPda = deriveSupportPda(
     proposalPubkey,
     splVoteAccount,
-    program.programId
+    program.programId,
   );
-
-  const DISCUSSION_EPOCHS = 4;
-  const SNAPSHOT_EPOCH_EXTENSION = 1;
 
   const epochInfo = await program.provider.connection.getEpochInfo();
   const targetEpoch =
-    epochInfo.epoch + DISCUSSION_EPOCHS + SNAPSHOT_EPOCH_EXTENSION;
+    epochInfo.epoch +
+    globalConfig.discussionEpochs +
+    globalConfig.snapshotEpochExtension;
 
   const epochSchedule = await program.provider.connection.getEpochSchedule();
   const startSlot = epochSchedule.getFirstSlotInEpoch(targetEpoch);
-  const snapshotSlot = startSlot + 1000;
+  const snapshotSlot = startSlot + globalConfig.snapshotSlotOffset;
 
   const seeds = [
     Buffer.from("BallotBox"),
@@ -63,11 +68,11 @@ export async function supportProposal(
   ];
   const [ballotBoxPda] = PublicKey.findProgramAddressSync(
     seeds,
-    SNAPSHOT_PROGRAM_ID
+    SNAPSHOT_PROGRAM_ID,
   );
   const [programConfigPda] = PublicKey.findProgramAddressSync(
     [Buffer.from("ProgramConfig")],
-    SNAPSHOT_PROGRAM_ID
+    SNAPSHOT_PROGRAM_ID,
   );
 
   // Build support proposal instruction
@@ -82,6 +87,7 @@ export async function supportProposal(
       ballotBox: ballotBoxPda,
       ballotProgram: SNAPSHOT_PROGRAM_ID,
       programConfig: programConfigPda,
+      globalConfig: deriveGlobalConfigPda(program.programId),
     })
     .instruction();
 
@@ -95,7 +101,7 @@ export async function supportProposal(
   const tx = await wallet.signTransaction(transaction);
 
   const signature = await program.provider.connection.sendRawTransaction(
-    tx.serialize()
+    tx.serialize(),
   );
 
   console.log("signature support proposal", signature);
