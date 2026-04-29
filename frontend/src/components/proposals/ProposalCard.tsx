@@ -200,7 +200,7 @@ export default function ProposalCard({ proposal }: ProposalCardProps) {
   }
 
   const handleCardClick = () => {
-    router.push(getProposalDetailPagePath(publicKey.toBase58()));
+    router.push(getProposalDetailPagePath(publicKey));
   };
 
   const handleButtonClick: MouseEventHandler<HTMLButtonElement> = (event) => {

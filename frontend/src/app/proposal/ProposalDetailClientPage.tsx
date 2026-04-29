@@ -1,14 +1,16 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import ProposalDetailView from "@/components/proposals/detail/ProposalDetailView";
 import { useProposalDetails } from "@/hooks";
 
-export const ProposalDetailClientPage = () => {
-  const params = useParams();
-  const proposalPublicKey = params.proposalPk;
+type ProposalDetailClientPageProps = {
+  proposalPublicKey: string;
+};
 
-  if (!proposalPublicKey || typeof proposalPublicKey !== "string") notFound();
+export const ProposalDetailClientPage = ({
+  proposalPublicKey,
+}: ProposalDetailClientPageProps) => {
 
   const {
     data: proposalData,
